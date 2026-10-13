@@ -1,0 +1,417 @@
+<title>Kellogg's Sample Journey</title>
+<style>
+  /* Layout: single centered phone frame; a WhatsApp-style chat that advances on tap */
+  :root {
+    --bg: #0b141a;            /* app chat background (dark wa) */
+    --panel: #111b21;        /* phone chrome */
+    --wa-green: #1f8c6e;      /* header / brand */
+    --wa-green-deep: #025c4c;
+    --bubble-in: #202c33;    /* incoming bubble */
+    --bubble-out: #005c4b;   /* outgoing bubble */
+    --fg: #e9edef;
+    --fg-dim: #8696a0;
+    --accent: #53bdeb;       /* link blue */
+    --card: #1b2730;
+    --page: #0a0f12;         /* area behind the phone */
+    --kellogg: #e2231a;      /* Kellogg's red */
+    --pedigree: #ffd100;     /* Pedigree yellow */
+    --font: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  }
+  :root[data-theme="light"] { --page: #d9dde0; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #16232b, var(--page));
+    color: var(--fg);
+    font-family: var(--font);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-block: 24px;
+    padding-inline: 16px;
+    min-height: 100%;
+  }
+  .lead {
+    max-width: 420px;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .lead h1 { font-size: 18px; margin: 0 0 4px; letter-spacing: .2px; }
+  .lead p { margin: 0; color: var(--fg-dim); font-size: 13px; line-height: 1.5; }
+
+  /* Phone */
+  .phone {
+    width: 100%;
+    max-width: 390px;
+    height: min(760px, 82vh);
+    background: var(--panel);
+    border-radius: 36px;
+    padding: 12px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.55), 0 0 0 2px #2a3942 inset;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .notch {
+    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 24px; background: #000; border-radius: 0 0 16px 16px; z-index: 5;
+  }
+  .screen {
+    flex: 1;
+    border-radius: 26px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    position: relative;
+  }
+
+  /* Status bar */
+  .statusbar {
+    height: 30px; flex: 0 0 auto;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 20px 2px; font-size: 12px; color: var(--fg); font-weight: 600;
+    background: var(--wa-green-deep);
+  }
+  .statusbar .icons { letter-spacing: 2px; }
+
+  /* Chat header */
+  .chat-header {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    background: var(--wa-green-deep);
+    color: #fff;
+  }
+  .back { font-size: 20px; line-height: 1; cursor: pointer; opacity: .9; }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: grid; place-items: center; font-weight: 800; font-size: 15px; color: #111;
+    flex: 0 0 auto;
+  }
+  .avatar.pedigree { background: var(--pedigree); }
+  .avatar.kellogg { background: #fff; color: var(--kellogg); }
+  .chat-title { line-height: 1.15; min-width: 0; }
+  .chat-title .name { font-weight: 600; font-size: 15px; }
+  .chat-title .status { font-size: 11px; color: #cfe6df; }
+  .header-actions { margin-left: auto; display: flex; gap: 16px; font-size: 16px; opacity: .85; }
+
+  /* Message area */
+  .messages {
+    flex: 1; overflow-y: auto;
+    padding: 14px 10px 8px;
+    display: flex; flex-direction: column; gap: 8px;
+    background-image:
+      radial-gradient(circle at 20% 15%, rgba(255,255,255,.015) 0, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(255,255,255,.015) 0, transparent 40%);
+  }
+  .daychip {
+    align-self: center; background: #182229; color: var(--fg-dim);
+    font-size: 11px; padding: 4px 10px; border-radius: 8px; margin: 2px 0 6px;
+  }
+  .row { display: flex; max-width: 100%; }
+  .row.in { justify-content: flex-start; }
+  .row.out { justify-content: flex-end; }
+  .bubble {
+    max-width: 82%;
+    padding: 7px 10px 8px;
+    border-radius: 10px;
+    font-size: 14px; line-height: 1.42;
+    position: relative;
+    animation: pop .18s ease-out;
+    word-wrap: break-word;
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; } }
+  .row.in .bubble { background: var(--bubble-in); border-top-left-radius: 3px; }
+  .row.out .bubble { background: var(--bubble-out); border-top-right-radius: 3px; }
+  .bubble .meta { display: block; text-align: right; font-size: 10px; color: var(--fg-dim); margin-top: 2px; }
+  .bubble strong { color: #fff; }
+  .bubble .brandline { font-weight: 700; }
+  .bubble.kellogg .brandline { color: #ff6a60; }
+
+  /* offer card inside a bubble */
+  .offer {
+    background: var(--card); border-radius: 8px; overflow: hidden; margin: -2px -4px 4px;
+  }
+  .offer .banner {
+    height: 86px; display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--kellogg), #8c0f09);
+    color: #fff; font-weight: 800; letter-spacing: 1px; font-size: 19px;
+  }
+  .offer .banner span { text-shadow: 0 2px 6px rgba(0,0,0,.35); }
+  .offer .body { padding: 8px 10px; font-size: 13px; }
+
+  /* typing indicator */
+  .typing .bubble { padding: 10px 12px; }
+  .dots { display: inline-flex; gap: 4px; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-dim); display: inline-block; animation: blink 1.2s infinite; }
+  .dots i:nth-child(2){ animation-delay: .2s; } .dots i:nth-child(3){ animation-delay: .4s; }
+  @keyframes blink { 0%,60%,100%{ opacity:.3; transform: translateY(0);} 30%{ opacity:1; transform: translateY(-3px);} }
+
+  /* Quick reply / input dock */
+  .dock { flex: 0 0 auto; padding: 8px 10px; background: transparent; }
+  .quick { display: flex; flex-direction: column; gap: 7px; }
+  .qbtn {
+    width: 100%; text-align: center;
+    background: #202c33; color: var(--accent);
+    border: 1px solid #2a3942; border-radius: 10px;
+    padding: 11px 12px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: var(--font);
+    transition: background .12s, transform .06s;
+  }
+  .qbtn:hover { background: #26343d; }
+  .qbtn:active { transform: scale(.985); }
+  .qbtn.primary { background: var(--wa-green); color: #fff; border-color: transparent; }
+  .qbtn.primary:hover { background: #249b7a; }
+  .qbtn.kellogg { background: var(--kellogg); color: #fff; border-color: transparent; }
+
+  .fakeinput {
+    display: flex; align-items: center; gap: 8px;
+    background: #202c33; border-radius: 22px; padding: 9px 14px; color: var(--fg-dim); font-size: 14px;
+  }
+  .fakeinput .send { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; background: var(--wa-green); display: grid; place-items: center; color: #fff; }
+
+  .hint { text-align: center; font-size: 11px; color: var(--fg-dim); margin-top: 6px; min-height: 14px; }
+
+  .restart {
+    margin-top: 16px; background: transparent; color: var(--fg-dim);
+    border: 1px solid #2a3942; border-radius: 20px; padding: 7px 16px; font-size: 12px;
+    cursor: pointer; font-family: var(--font);
+  }
+  .restart:hover { color: var(--fg); }
+</style>
+
+<div class="lead">
+  <h1>Pedigree → Kellogg's cross-sell</h1>
+  <p>Clickable demo. A happy Pedigree claimant gets a WhatsApp push, taps through, and claims a free Kellogg's sample.</p>
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="statusbar"><span>9:41</span><span class="icons">●●● ▢ 100%</span></div>
+
+    <div class="chat-header">
+      <span class="back" id="back">‹</span>
+      <div class="avatar" id="avatar">P</div>
+      <div class="chat-title">
+        <div class="name" id="chatName">Pedigree</div>
+        <div class="status" id="chatStatus">online</div>
+      </div>
+      <div class="header-actions"><span>📞</span><span>⋮</span></div>
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="dock">
+      <div class="quick" id="quick"></div>
+      <div class="hint" id="hint"></div>
+    </div>
+  </div>
+</div>
+
+<button class="restart" id="restart">↺ Restart demo</button>
+
+<script>
+(function () {
+  var messages = document.getElementById('messages');
+  var quick = document.getElementById('quick');
+  var hint = document.getElementById('hint');
+  var avatar = document.getElementById('avatar');
+  var chatName = document.getElementById('chatName');
+  var chatStatus = document.getElementById('chatStatus');
+
+  var answers = {};
+  var now = function () {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/^0/, '');
+  };
+
+  function setChat(who) {
+    if (who === 'pedigree') {
+      avatar.className = 'avatar pedigree'; avatar.textContent = 'P';
+      chatName.textContent = 'Pedigree'; chatStatus.textContent = 'online';
+    } else {
+      avatar.className = 'avatar kellogg'; avatar.textContent = 'K';
+      chatName.textContent = "Kellogg's"; chatStatus.textContent = 'typically replies instantly';
+    }
+  }
+
+  function dayChip(text) {
+    var c = document.createElement('div');
+    c.className = 'daychip'; c.textContent = text;
+    messages.appendChild(c); scroll();
+  }
+
+  function scroll() { messages.scrollTop = messages.scrollHeight; }
+
+  function addBubble(side, html, opts) {
+    opts = opts || {};
+    var row = document.createElement('div');
+    row.className = 'row ' + side;
+    var b = document.createElement('div');
+    b.className = 'bubble' + (opts.kellogg ? ' kellogg' : '');
+    b.innerHTML = html + '<span class="meta">' + now() + (side === 'out' ? ' ✓✓' : '') + '</span>';
+    row.appendChild(b);
+    messages.appendChild(row);
+    scroll();
+  }
+
+  function typing(cb, delay) {
+    var row = document.createElement('div');
+    row.className = 'row in typing';
+    row.innerHTML = '<div class="bubble"><span class="dots"><i></i><i></i><i></i></span></div>';
+    messages.appendChild(row); scroll();
+    setTimeout(function () { row.remove(); cb(); }, delay || 900);
+  }
+
+  function setQuick(buttons) {
+    quick.innerHTML = '';
+    (buttons || []).forEach(function (btn) {
+      var el = document.createElement('button');
+      el.className = 'qbtn' + (btn.cls ? ' ' + btn.cls : '');
+      el.innerHTML = btn.label;
+      el.onclick = btn.onClick;
+      quick.appendChild(el);
+    });
+  }
+
+  function setInput(placeholder) {
+    quick.innerHTML = '';
+    var w = document.createElement('div');
+    w.className = 'fakeinput';
+    w.innerHTML = '<span>' + placeholder + '</span><span class="send">➤</span>';
+    quick.appendChild(w);
+  }
+
+  function setHint(t) { hint.textContent = t || ''; }
+
+  // ---------- Flow ----------
+  function start() {
+    messages.innerHTML = '';
+    answers = {};
+    setChat('pedigree');
+    dayChip('TODAY');
+    // context: the user claimed Pedigree earlier and left positive feedback
+    addBubble('in', 'Thanks for the ⭐⭐⭐⭐⭐ feedback on your Pedigree sample, Rahul! So glad your pup loved it. 🐶');
+    setQuick([]);
+    setHint('A targeted push is sent to happy Pedigree claimants…');
+    setTimeout(pushOffer, 1100);
+  }
+
+  function pushOffer() {
+    typing(function () {
+      addBubble('in',
+        '<div class="offer">' +
+          '<div class="banner"><span>KELLOGG\'S</span></div>' +
+          '<div class="body">We think we\'ve got a special offer for you — and we reckon you\'ll <strong>love Kellogg\'s</strong>. 🥣<br><br>Would you like to claim a <strong>free sample</strong>?</div>' +
+        '</div>'
+      );
+      setHint('👇 Tap to accept the offer');
+      setQuick([
+        { label: '🎁 Yes, claim my free sample', cls: 'primary', onClick: acceptOffer },
+        { label: 'No thanks', onClick: function () {
+            addBubble('out', 'No thanks');
+            typing(function () { addBubble('in', 'No worries — enjoy the rest of your day! 🐾'); setQuick([]); setHint('Demo ended. Restart to replay.'); });
+        } }
+      ]);
+    });
+  }
+
+  function acceptOffer() {
+    addBubble('out', 'Yes, claim my free sample 🎁');
+    setQuick([]);
+    setHint('Redirecting to the Kellogg\'s chatbot…');
+    setTimeout(function () {
+      typing(function () {
+        setChat('kellogg');
+        dayChip("You're now chatting with Kellogg's");
+        addBubble('in', '<span class="brandline">Kellogg\'s</span> here! 👋 Welcome, and congrats on your free sample. Let\'s get it sorted with a few quick questions.', { kellogg: true });
+        setTimeout(askProduct, 700);
+      }, 1100);
+    }, 700);
+  }
+
+  function askProduct() {
+    typing(function () {
+      addBubble('in', 'First up — which sample would you like to try?', { kellogg: true });
+      setHint('Pick a product');
+      setQuick([
+        { label: '🌽 Corn Flakes', cls: 'kellogg', onClick: function () { pickProduct('Corn Flakes'); } },
+        { label: '🍫 Chocos', cls: 'kellogg', onClick: function () { pickProduct('Chocos'); } },
+        { label: '🥣 Muesli', cls: 'kellogg', onClick: function () { pickProduct('Muesli'); } }
+      ]);
+    });
+  }
+  function pickProduct(p) {
+    answers.product = p;
+    addBubble('out', p);
+    setQuick([]);
+    typing(function () {
+      addBubble('in', 'Great choice! 🙌 Who\'s it mainly for?', { kellogg: true });
+      setHint('Pick one');
+      setQuick([
+        { label: 'Kids', cls: 'kellogg', onClick: function () { pickWho('Kids'); } },
+        { label: 'Whole family', cls: 'kellogg', onClick: function () { pickWho('Whole family'); } },
+        { label: 'Just me', cls: 'kellogg', onClick: function () { pickWho('Just me'); } }
+      ]);
+    });
+  }
+  function pickWho(w) {
+    answers.who = w;
+    addBubble('out', w);
+    setQuick([]);
+    typing(function () {
+      addBubble('in', 'Perfect. Now, where should we deliver your free sample? 📦<br><br>Please share your <strong>full delivery address</strong> (flat, street, city & PIN code).', { kellogg: true });
+      setHint('👇 Tap to send a sample address');
+      setQuick([
+        { label: '📍 42, Palm Residency, MG Road,\nBengaluru 560001', cls: 'primary', onClick: function () { giveAddress('42, Palm Residency, MG Road, Bengaluru 560001'); } }
+      ]);
+    });
+  }
+  function giveAddress(addr) {
+    answers.address = addr;
+    addBubble('out', addr.replace(/, /g, ',<br>'));
+    setQuick([]);
+    typing(function () {
+      addBubble('in', 'And a mobile number for delivery updates? 📱', { kellogg: true });
+      setQuick([
+        { label: '📱 +91 98••• ••210', cls: 'primary', onClick: function () { givePhone('+91 98••• ••210'); } }
+      ]);
+    });
+  }
+  function givePhone(ph) {
+    answers.phone = ph;
+    addBubble('out', ph);
+    setQuick([]);
+    typing(function () {
+      addBubble('in',
+        'Let me confirm your details 📝<br><br>' +
+        '• <strong>Sample:</strong> ' + answers.product + '<br>' +
+        '• <strong>For:</strong> ' + answers.who + '<br>' +
+        '• <strong>Deliver to:</strong> ' + answers.address + '<br>' +
+        '• <strong>Mobile:</strong> ' + answers.phone + '<br><br>' +
+        'All correct?', { kellogg: true });
+      setHint('Confirm to finish');
+      setQuick([
+        { label: '✅ Confirm & claim', cls: 'kellogg', onClick: confirm },
+        { label: '✏️ Edit address', onClick: function () { pickWho(answers.who); } }
+      ]);
+    }, 1200);
+  }
+  function confirm() {
+    addBubble('out', 'Confirm & claim ✅');
+    setQuick([]);
+    typing(function () {
+      addBubble('in', '🎉 Done! Your free <strong>' + answers.product + '</strong> sample is on its way to ' + answers.address.split(',')[0] + '. Expect it in 3–5 days.<br><br>We\'ll text you the tracking link. Enjoy, and welcome to Kellogg\'s! 🥣❤️', { kellogg: true });
+      setInput('Message');
+      setHint('✓ Journey complete');
+    }, 1300);
+  }
+
+  document.getElementById('restart').onclick = start;
+  document.getElementById('back').onclick = start;
+  start();
+})();
+</script>
