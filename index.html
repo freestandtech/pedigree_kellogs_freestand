@@ -1,417 +1,468 @@
-<title>Kellogg's Sample Journey</title>
+<title>Pedigree × Kellogg's Handoff</title>
 <style>
-  /* Layout: single centered phone frame; a WhatsApp-style chat that advances on tap */
+  /* Freestand-branded stage holding two realistic WhatsApp phones side by side.
+     Single visual world (WhatsApp light), so colors are committed, not themed. */
   :root {
-    --bg: #0b141a;            /* app chat background (dark wa) */
-    --panel: #111b21;        /* phone chrome */
-    --wa-green: #1f8c6e;      /* header / brand */
-    --wa-green-deep: #025c4c;
-    --bubble-in: #202c33;    /* incoming bubble */
-    --bubble-out: #005c4b;   /* outgoing bubble */
-    --fg: #e9edef;
-    --fg-dim: #8696a0;
-    --accent: #53bdeb;       /* link blue */
-    --card: #1b2730;
-    --page: #0a0f12;         /* area behind the phone */
-    --kellogg: #e2231a;      /* Kellogg's red */
-    --pedigree: #ffd100;     /* Pedigree yellow */
+    color-scheme: light;
+    --fs-navy: #052762;      /* Freestand brand */
+    --fs-blue: #2872f4;
+    --stage: #c9d2d6;        /* area behind the phones */
+    --stage-2: #aeb9bf;
+
+    --wa-header: #008069;    /* WhatsApp green */
+    --wa-bg: #efe7de;        /* chat wallpaper base */
+    --bubble-in: #ffffff;
+    --bubble-out: #d9fdd3;
+    --wa-blue: #027eb5;      /* link / reply-button text */
+    --tick: #53bdeb;
+    --ink: #111b21;
+    --ink-dim: #667781;
+    --divider: #e9edef;
+
+    --pedigree: #ffd100;
+    --kellogg: #e2231a;
     --font: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
   }
-  :root[data-theme="light"] { --page: #d9dde0; }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
     margin: 0;
-    background:
-      radial-gradient(1200px 600px at 50% -10%, #16232b, var(--page));
-    color: var(--fg);
     font-family: var(--font);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-block: 24px;
-    padding-inline: 16px;
-    min-height: 100%;
+    color: #fff;
+    background: radial-gradient(1200px 700px at 50% -5%, var(--stage), var(--stage-2));
+    display: flex; flex-direction: column; min-height: 100%;
   }
+
+  /* Freestand top bar */
+  .fsbar {
+    background: var(--fs-navy);
+    padding: 12px 20px calc(12px + env(safe-area-inset-top, 0px));
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 2px 14px rgba(5,39,98,.3);
+  }
+  .fsbar svg { height: 24px; width: auto; display: block; }
+  .fsbar .tag {
+    margin-left: auto; font-size: 12px; color: #9db6e8; letter-spacing: .3px;
+    text-align: right; line-height: 1.3;
+  }
+  .fsbar .tag b { color: #fff; font-weight: 600; }
+
   .lead {
-    max-width: 420px;
-    text-align: center;
-    margin-bottom: 18px;
+    text-align: center; padding: 16px 16px 4px; color: #33414a;
   }
-  .lead h1 { font-size: 18px; margin: 0 0 4px; letter-spacing: .2px; }
-  .lead p { margin: 0; color: var(--fg-dim); font-size: 13px; line-height: 1.5; }
+  .lead h1 { margin: 0 0 4px; font-size: 16px; color: #1e2a30; letter-spacing: .2px; }
+  .lead p { margin: 0; font-size: 12.5px; color: #4a575e; }
+
+  /* Stage with the phones */
+  .stage {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    gap: clamp(14px, 4vw, 48px);
+    padding: 18px 16px 28px;
+    flex-wrap: wrap;
+  }
+  .slot { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .slot .caption {
+    font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
+    color: #44525a;
+  }
+
+  /* connector */
+  .connector {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    color: var(--fs-navy); opacity: .35; transition: opacity .4s;
+    align-self: center;
+  }
+  .connector.live { opacity: 1; }
+  .connector .arrow { font-size: 30px; line-height: 1; }
+  .connector .lbl { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+  @media (max-width: 720px) { .connector .arrow { transform: rotate(90deg); } }
 
   /* Phone */
   .phone {
-    width: 100%;
-    max-width: 390px;
-    height: min(760px, 82vh);
-    background: var(--panel);
-    border-radius: 36px;
-    padding: 12px;
-    box-shadow: 0 30px 80px rgba(0,0,0,.55), 0 0 0 2px #2a3942 inset;
-    display: flex;
-    flex-direction: column;
+    width: 320px; max-width: 92vw;
+    height: min(640px, 72vh);
+    background: #0b141a;
+    border-radius: 34px;
+    padding: 9px;
+    box-shadow: 0 24px 60px rgba(5,39,98,.28), 0 0 0 2px #223 inset;
     position: relative;
   }
-  .notch {
-    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
-    width: 120px; height: 24px; background: #000; border-radius: 0 0 16px 16px; z-index: 5;
+  .phone.pending { opacity: .45; filter: grayscale(.4); }
+  .phone .screen {
+    height: 100%; border-radius: 26px; overflow: hidden;
+    display: flex; flex-direction: column; background: var(--wa-bg); position: relative;
   }
-  .screen {
-    flex: 1;
-    border-radius: 26px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg);
-    position: relative;
-  }
-
-  /* Status bar */
-  .statusbar {
-    height: 30px; flex: 0 0 auto;
-    display: flex; align-items: flex-end; justify-content: space-between;
-    padding: 0 20px 2px; font-size: 12px; color: var(--fg); font-weight: 600;
-    background: var(--wa-green-deep);
-  }
-  .statusbar .icons { letter-spacing: 2px; }
-
-  /* Chat header */
-  .chat-header {
-    flex: 0 0 auto;
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 12px;
-    background: var(--wa-green-deep);
-    color: #fff;
-  }
-  .back { font-size: 20px; line-height: 1; cursor: pointer; opacity: .9; }
-  .avatar {
-    width: 38px; height: 38px; border-radius: 50%;
-    display: grid; place-items: center; font-weight: 800; font-size: 15px; color: #111;
-    flex: 0 0 auto;
-  }
-  .avatar.pedigree { background: var(--pedigree); }
-  .avatar.kellogg { background: #fff; color: var(--kellogg); }
-  .chat-title { line-height: 1.15; min-width: 0; }
-  .chat-title .name { font-weight: 600; font-size: 15px; }
-  .chat-title .status { font-size: 11px; color: #cfe6df; }
-  .header-actions { margin-left: auto; display: flex; gap: 16px; font-size: 16px; opacity: .85; }
-
-  /* Message area */
-  .messages {
-    flex: 1; overflow-y: auto;
-    padding: 14px 10px 8px;
-    display: flex; flex-direction: column; gap: 8px;
+  /* wallpaper doodle tint */
+  .screen .messages::before {
+    content: ""; position: absolute; inset: 0;
     background-image:
-      radial-gradient(circle at 20% 15%, rgba(255,255,255,.015) 0, transparent 40%),
-      radial-gradient(circle at 80% 70%, rgba(255,255,255,.015) 0, transparent 40%);
+      radial-gradient(circle at 15% 20%, rgba(0,0,0,.02) 0 2px, transparent 3px),
+      radial-gradient(circle at 70% 60%, rgba(0,0,0,.02) 0 2px, transparent 3px),
+      radial-gradient(circle at 40% 85%, rgba(0,0,0,.02) 0 2px, transparent 3px);
+    background-size: 120px 120px; pointer-events: none;
   }
-  .daychip {
-    align-self: center; background: #182229; color: var(--fg-dim);
-    font-size: 11px; padding: 4px 10px; border-radius: 8px; margin: 2px 0 6px;
+
+  .statusbar {
+    flex: 0 0 auto; height: 24px; background: #0b141a; color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px; font-size: 11px; font-weight: 600;
   }
-  .row { display: flex; max-width: 100%; }
+  .statusbar .ic { letter-spacing: 2px; font-size: 10px; }
+
+  .wa-header {
+    flex: 0 0 auto; background: var(--wa-header); color: #fff;
+    display: flex; align-items: center; gap: 9px; padding: 7px 10px;
+  }
+  .wa-header .back { font-size: 20px; line-height: 1; opacity: .9; }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
+    display: grid; place-items: center; font-weight: 800; font-size: 14px;
+    background: #fff; overflow: hidden;
+  }
+  .avatar.pedigree { background: var(--pedigree); color: #3a2f00; }
+  .avatar.kellogg { background: #fff; color: var(--kellogg); }
+  .wa-header .who { min-width: 0; line-height: 1.15; }
+  .wa-header .who .nm { font-size: 14px; font-weight: 600; display:flex; align-items:center; gap:4px; }
+  .wa-header .who .st { font-size: 10.5px; color: #d7efe8; }
+  .wa-header .who .nm .verified { font-size: 10px; }
+  .wa-header .acts { margin-left: auto; display: flex; gap: 15px; font-size: 15px; opacity: .92; }
+
+  .messages {
+    flex: 1; overflow-y: auto; position: relative;
+    padding: 12px 8px 10px; display: flex; flex-direction: column; gap: 4px; z-index: 1;
+  }
+  .chip {
+    align-self: center; background: #ffffff; color: #54656f; font-size: 11px;
+    padding: 4px 11px; border-radius: 7px; margin: 3px 0 7px; box-shadow: 0 1px 1px rgba(0,0,0,.06);
+  }
+  .chip.enc { background: #fdf4c9; color: #5a5536; text-align: center; max-width: 90%; }
+  .row { display: flex; width: 100%; margin-top: 2px; }
   .row.in { justify-content: flex-start; }
   .row.out { justify-content: flex-end; }
   .bubble {
-    max-width: 82%;
-    padding: 7px 10px 8px;
-    border-radius: 10px;
-    font-size: 14px; line-height: 1.42;
-    position: relative;
-    animation: pop .18s ease-out;
-    word-wrap: break-word;
+    max-width: 82%; padding: 6px 8px 5px; border-radius: 8px; font-size: 13.2px; line-height: 1.4;
+    color: var(--ink); position: relative; box-shadow: 0 1px .5px rgba(0,0,0,.13);
+    animation: pop .16s ease-out; word-wrap: break-word;
   }
-  @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; } }
-  .row.in .bubble { background: var(--bubble-in); border-top-left-radius: 3px; }
-  .row.out .bubble { background: var(--bubble-out); border-top-right-radius: 3px; }
-  .bubble .meta { display: block; text-align: right; font-size: 10px; color: var(--fg-dim); margin-top: 2px; }
-  .bubble strong { color: #fff; }
-  .bubble .brandline { font-weight: 700; }
-  .bubble.kellogg .brandline { color: #ff6a60; }
+  @keyframes pop { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
+  .row.in .bubble { background: var(--bubble-in); border-top-left-radius: 2px; }
+  .row.out .bubble { background: var(--bubble-out); border-top-right-radius: 2px; }
+  .bubble .tm { font-size: 10px; color: var(--ink-dim); float: right; margin: 6px 0 0 8px; }
+  .bubble .tm .tick { color: var(--tick); letter-spacing: -2px; margin-left: 2px; }
+  .bubble b { font-weight: 700; }
+  .bubble .stars { color: #f5b301; letter-spacing: 1px; }
 
-  /* offer card inside a bubble */
-  .offer {
-    background: var(--card); border-radius: 8px; overflow: hidden; margin: -2px -4px 4px;
+  /* offer card */
+  .offer { margin: -2px -4px 3px; border-radius: 6px; overflow: hidden; }
+  .offer .hero {
+    height: 92px; display: grid; place-items: center; gap: 2px;
+    background: linear-gradient(135deg, var(--kellogg), #9a0f09); color: #fff; text-align: center;
   }
-  .offer .banner {
-    height: 86px; display: grid; place-items: center;
-    background: linear-gradient(135deg, var(--kellogg), #8c0f09);
-    color: #fff; font-weight: 800; letter-spacing: 1px; font-size: 19px;
-  }
-  .offer .banner span { text-shadow: 0 2px 6px rgba(0,0,0,.35); }
-  .offer .body { padding: 8px 10px; font-size: 13px; }
+  .offer .hero .k { font-weight: 900; font-size: 20px; letter-spacing: .5px; text-shadow: 0 2px 5px rgba(0,0,0,.35); }
+  .offer .hero .s { font-size: 11px; opacity: .95; letter-spacing: 2px; }
 
-  /* typing indicator */
-  .typing .bubble { padding: 10px 12px; }
+  /* WhatsApp interactive buttons */
+  .wa-btns { display: flex; flex-direction: column; gap: 4px; margin-top: 3px; width: 82%; }
+  .row.in + .wa-btns { align-self: flex-start; }
+  .wa-btns.grouped { gap: 0; background: var(--bubble-in); border-radius: 8px; overflow: hidden; box-shadow: 0 1px .5px rgba(0,0,0,.13); }
+  .wa-btn {
+    border: none; background: var(--bubble-in); color: var(--wa-blue);
+    font-family: var(--font); font-size: 13.5px; font-weight: 600;
+    padding: 11px 10px; cursor: pointer; width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: background .12s;
+  }
+  .wa-btns.grouped .wa-btn + .wa-btn { border-top: 1px solid var(--divider); }
+  .wa-btns:not(.grouped) .wa-btn { border-radius: 8px; box-shadow: 0 1px .5px rgba(0,0,0,.13); }
+  .wa-btn:hover { background: #f3f5f6; }
+  .wa-btn:active { background: #e9edef; }
+  .wa-btn .i { font-size: 15px; }
+
+  /* typing */
+  .typing .bubble { padding: 9px 11px; }
   .dots { display: inline-flex; gap: 4px; }
-  .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-dim); display: inline-block; animation: blink 1.2s infinite; }
-  .dots i:nth-child(2){ animation-delay: .2s; } .dots i:nth-child(3){ animation-delay: .4s; }
-  @keyframes blink { 0%,60%,100%{ opacity:.3; transform: translateY(0);} 30%{ opacity:1; transform: translateY(-3px);} }
+  .dots i { width: 6px; height: 6px; border-radius: 50%; background: #9aa6ac; animation: bl 1.2s infinite; }
+  .dots i:nth-child(2){animation-delay:.2s} .dots i:nth-child(3){animation-delay:.4s}
+  @keyframes bl { 0%,60%,100%{opacity:.3;transform:translateY(0)} 30%{opacity:1;transform:translateY(-3px)} }
 
-  /* Quick reply / input dock */
-  .dock { flex: 0 0 auto; padding: 8px 10px; background: transparent; }
-  .quick { display: flex; flex-direction: column; gap: 7px; }
-  .qbtn {
-    width: 100%; text-align: center;
-    background: #202c33; color: var(--accent);
-    border: 1px solid #2a3942; border-radius: 10px;
-    padding: 11px 12px; font-size: 14px; font-weight: 600;
-    cursor: pointer; font-family: var(--font);
-    transition: background .12s, transform .06s;
+  /* input dock */
+  .dock {
+    flex: 0 0 auto; background: var(--wa-bg); padding: 6px 7px calc(6px + env(safe-area-inset-bottom,0px));
+    display: flex; align-items: center; gap: 6px;
   }
-  .qbtn:hover { background: #26343d; }
-  .qbtn:active { transform: scale(.985); }
-  .qbtn.primary { background: var(--wa-green); color: #fff; border-color: transparent; }
-  .qbtn.primary:hover { background: #249b7a; }
-  .qbtn.kellogg { background: var(--kellogg); color: #fff; border-color: transparent; }
-
-  .fakeinput {
+  .dock .inp {
+    flex: 1; background: #fff; border-radius: 20px; padding: 8px 12px; color: #8696a0; font-size: 13px;
     display: flex; align-items: center; gap: 8px;
-    background: #202c33; border-radius: 22px; padding: 9px 14px; color: var(--fg-dim); font-size: 14px;
   }
-  .fakeinput .send { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; background: var(--wa-green); display: grid; place-items: center; color: #fff; }
+  .dock .inp .ei { margin-left: auto; opacity: .6; }
+  .dock .mic { width: 38px; height: 38px; border-radius: 50%; background: var(--wa-header); color: #fff; display: grid; place-items: center; flex: 0 0 auto; }
 
-  .hint { text-align: center; font-size: 11px; color: var(--fg-dim); margin-top: 6px; min-height: 14px; }
-
+  .footer { text-align: center; padding: 0 16px 22px; }
   .restart {
-    margin-top: 16px; background: transparent; color: var(--fg-dim);
-    border: 1px solid #2a3942; border-radius: 20px; padding: 7px 16px; font-size: 12px;
-    cursor: pointer; font-family: var(--font);
+    background: var(--fs-navy); color: #fff; border: none; border-radius: 22px;
+    padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font);
+    box-shadow: 0 4px 14px rgba(5,39,98,.25);
   }
-  .restart:hover { color: var(--fg); }
+  .restart:hover { background: #0a3a86; }
+  .hint { color: #44525a; font-size: 12px; margin: 10px 0 0; min-height: 15px; }
 </style>
 
-<div class="lead">
-  <h1>Pedigree → Kellogg's cross-sell</h1>
-  <p>Clickable demo. A happy Pedigree claimant gets a WhatsApp push, taps through, and claims a free Kellogg's sample.</p>
+<div class="fsbar">
+  <svg viewBox="0 0 338 83" aria-label="Freestand">
+    <path fill="#fff" d="M84.5438 26.4388H68.4805V37.5159H83.9765V44.0547H68.4805V66H61.5236V19.8999H84.5438V26.4388ZM90.7542 36.9188H97.4721V39.5164C98.7062 38.2225 99.801 37.3368 100.756 36.859C101.732 36.3614 102.886 36.1126 104.22 36.1126C105.991 36.1126 107.843 36.6898 109.773 37.8443L106.698 43.995C105.424 43.0794 104.18 42.6215 102.966 42.6215C99.3034 42.6215 97.4721 45.3883 97.4721 50.9219V66H90.7542V36.9188ZM139.691 53.0418H118.85C119.029 55.4304 119.806 57.3314 121.179 58.7446C122.552 60.138 124.314 60.8346 126.464 60.8346C128.136 60.8346 129.519 60.4365 130.614 59.6403C131.689 58.8441 132.913 57.3712 134.286 55.2214L139.959 58.3863C139.084 59.8792 138.158 61.1631 137.183 62.2379C136.207 63.2929 135.162 64.1687 134.048 64.8654C132.933 65.5422 131.729 66.0398 130.435 66.3583C129.141 66.6768 127.738 66.836 126.225 66.836C121.886 66.836 118.402 65.4427 115.775 62.656C113.147 59.8493 111.834 56.1271 111.834 51.4892C111.834 46.8912 113.108 43.1689 115.655 40.3225C118.223 37.5159 121.627 36.1126 125.867 36.1126C130.146 36.1126 133.53 37.4761 136.018 40.2031C138.486 42.9102 139.721 46.6623 139.721 51.4594L139.691 53.0418ZM132.794 47.548C131.858 43.9651 129.599 42.1737 126.016 42.1737C125.2 42.1737 124.433 42.3031 123.717 42.5618C123 42.8007 122.343 43.159 121.746 43.6367C121.169 44.0945 120.671 44.6519 120.253 45.3087C119.835 45.9656 119.517 46.712 119.298 47.548H132.794ZM173.549 53.0418H152.709C152.888 55.4304 153.664 57.3314 155.037 58.7446C156.411 60.138 158.173 60.8346 160.322 60.8346C161.994 60.8346 163.378 60.4365 164.472 59.6403C165.547 58.8441 166.771 57.3712 168.145 55.2214L173.818 58.3863C172.942 59.8792 172.016 61.1631 171.041 62.2379C170.066 63.2929 169.021 64.1687 167.906 64.8654C166.791 65.5422 165.587 66.0398 164.293 66.3583C162.999 66.6768 161.596 66.836 160.083 66.836C155.744 66.836 152.261 65.4427 149.633 62.656C147.006 59.8493 145.692 56.1271 145.692 51.4892C145.692 46.8912 146.966 43.1689 149.514 40.3225C152.082 37.5159 155.485 36.1126 159.725 36.1126C164.005 36.1126 167.389 37.4761 169.877 40.2031C172.345 42.9102 173.579 46.6623 173.579 51.4594L173.549 53.0418ZM166.652 47.548C165.717 43.9651 163.457 42.1737 159.874 42.1737C159.058 42.1737 158.292 42.3031 157.575 42.5618C156.859 42.8007 156.202 43.159 155.605 43.6367C155.028 44.0945 154.53 44.6519 154.112 45.3087C153.694 45.9656 153.375 46.712 153.156 47.548H166.652ZM208.273 26.7672L202.63 30.1112C201.575 28.28 200.57 27.0857 199.615 26.5283C198.62 25.8914 197.336 25.5729 195.763 25.5729C193.832 25.5729 192.23 26.1203 190.956 27.215C189.682 28.2899 189.045 29.6435 189.045 31.2757C189.045 33.5249 190.717 35.3363 194.061 36.7097L198.659 38.5908C202.402 40.1036 205.138 41.9547 206.87 44.1443C208.602 46.3139 209.468 48.9812 209.468 52.1461C209.468 56.3859 208.055 59.8892 205.228 62.656C202.382 65.4427 198.848 66.836 194.629 66.836C190.628 66.836 187.323 65.6517 184.716 63.283C182.148 60.9143 180.546 57.5802 179.909 53.2807L186.955 51.7281C187.274 54.4352 187.831 56.3063 188.627 57.3413C190.06 59.3318 192.15 60.3271 194.897 60.3271C197.067 60.3271 198.868 59.6005 200.302 58.1475C201.735 56.6944 202.451 54.8532 202.451 52.6238C202.451 51.7281 202.322 50.912 202.063 50.1755C201.824 49.4191 201.436 48.7324 200.899 48.1153C200.381 47.4784 199.704 46.8912 198.868 46.3537C198.032 45.7964 197.037 45.2689 195.883 44.7713L191.434 42.9201C185.124 40.2528 181.969 36.3515 181.969 31.216C181.969 27.7525 183.293 24.8563 185.94 22.5274C188.587 20.1786 191.882 19.0042 195.823 19.0042C201.138 19.0042 205.288 21.5919 208.273 26.7672ZM224.576 43.1888V66H217.858V43.1888H214.991V36.9188H217.858V26.2596H224.576V36.9188H229.801V43.1888H224.576ZM256.344 36.9188H263.092V66H256.344V62.9545C253.577 65.5422 250.602 66.836 247.417 66.836C243.396 66.836 240.072 65.3829 237.444 62.4768C234.837 59.511 233.533 55.8086 233.533 51.3698C233.533 47.0106 234.837 43.3779 237.444 40.4718C240.052 37.5657 243.316 36.1126 247.238 36.1126C250.621 36.1126 253.657 37.5059 256.344 40.2927V36.9188ZM240.4 51.3698C240.4 54.1565 241.147 56.4257 242.64 58.1773C244.172 59.9489 246.103 60.8346 248.432 60.8346C250.92 60.8346 252.93 59.9787 254.463 58.2669C255.996 56.4953 256.762 54.2461 256.762 51.5191C256.762 48.7921 255.996 46.5428 254.463 44.7713C252.93 43.0395 250.94 42.1737 248.492 42.1737C246.183 42.1737 244.252 43.0495 242.699 44.8011C241.167 46.5727 240.4 48.7622 240.4 51.3698ZM271.571 36.9188H278.319V39.6059C280.668 37.277 283.315 36.1126 286.261 36.1126C289.645 36.1126 292.283 37.1775 294.174 39.3074C295.806 41.1187 296.622 44.0746 296.622 48.175V66H289.874V49.7575C289.874 46.8912 289.476 44.9106 288.68 43.8158C287.904 42.7012 286.49 42.1438 284.44 42.1438C282.211 42.1438 280.628 42.8803 279.693 44.3533C278.777 45.8063 278.319 48.3442 278.319 51.967V66H271.571V36.9188ZM326.569 15.5706H333.317V66H326.569V62.9545C323.922 65.5422 320.926 66.836 317.582 66.836C313.601 66.836 310.297 65.3829 307.669 62.4768C305.062 59.511 303.758 55.8086 303.758 51.3698C303.758 47.0305 305.062 43.4078 307.669 40.5017C310.257 37.5756 313.511 36.1126 317.433 36.1126C320.836 36.1126 323.882 37.5059 326.569 40.2927V15.5706ZM310.625 51.3698C310.625 54.1565 311.372 56.4257 312.864 58.1773C314.397 59.9489 316.328 60.8346 318.657 60.8346C321.145 60.8346 323.155 59.9787 324.688 58.2669C326.221 56.4953 326.987 54.2461 326.987 51.5191C326.987 48.7921 326.221 46.5428 324.688 44.7713C323.155 43.0395 321.165 42.1737 318.717 42.1737C316.408 42.1737 314.477 43.0495 312.924 44.8011C311.392 46.5727 310.625 48.7622 310.625 51.3698Z"/>
+    <path stroke="#fff" stroke-width="3.43" stroke-linecap="round" stroke-linejoin="round" d="M5.11273 34.3195C5.11273 34.3195 5.11273 58.1626 5.11273 61.143C5.11273 64.1234 5.98956 65 8.09394 65C10.1983 65 23 65 23 65V34.3195M5.11273 34.3195C5.11273 34.3195 5.33194 34.3195 4.0167 34.3195C2.70146 34.3195 2 33.6621 2 32.654C2 31.6459 2 29.9366 2 28.7093C2 27.4821 2.7453 27 3.75365 27C4.762 27 5.11273 27 5.11273 27H12.778H23V34.3195M5.11273 34.3195H23"/>
+    <path stroke="#fff" stroke-width="3.43" stroke-linecap="round" stroke-linejoin="round" d="M45.0626 34.3788V62.9877C45.0276 64.2126 44.4927 65 43.572 65H27V34.3788M45.0626 34.3788C47.0355 34.3788 47.6931 34.2476 48 32.7165V28.6045C47.9123 28.1087 47.4213 27.0997 46.1587 27.0297C44.896 26.9597 32.8601 27.0297 27 27.0735V34.3788M45.0626 34.3788H27"/>
+    <path stroke="#fff" stroke-width="3.43" stroke-linecap="round" stroke-linejoin="round" d="M5 23C8.07142 23 18.7047 23 21.7072 23L20.6243 21.7239C17.4578 17.6405 10.7308 13.5575 11.0262 6.66641C11.1705 3.29799 15.8499 -0.581623 20.6243 4.31845C24.4439 8.23852 25.0707 15.4457 24.9066 18.5593C26.4653 14.0335 30.9018 5.74761 36.1783 8.81016C42.774 12.6383 33.4712 19.8353 31.8469 20.5499C30.5474 21.2849 28.6475 22.3194 27.8599 22.7448H46"/>
+  </svg>
+  <div class="tag"><b>WhatsApp cross-sell demo</b><br>Pedigree → Kellogg's</div>
 </div>
 
-<div class="phone">
-  <div class="notch"></div>
-  <div class="screen">
-    <div class="statusbar"><span>9:41</span><span class="icons">●●● ▢ 100%</span></div>
+<div class="lead">
+  <h1>One happy claimant, two brands</h1>
+  <p>A Pedigree claimant who left great feedback gets an offer — tap it to watch the Kellogg's chatbot open.</p>
+</div>
 
-    <div class="chat-header">
-      <span class="back" id="back">‹</span>
-      <div class="avatar" id="avatar">P</div>
-      <div class="chat-title">
-        <div class="name" id="chatName">Pedigree</div>
-        <div class="status" id="chatStatus">online</div>
+<div class="stage">
+  <div class="slot">
+    <div class="caption">Pedigree chatbot</div>
+    <div class="phone" id="phonePed">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="ic">▪▪▪ 100%</span></div>
+        <div class="wa-header">
+          <span class="back">‹</span>
+          <div class="avatar pedigree">P</div>
+          <div class="who"><div class="nm">Pedigree <span class="verified">✅</span></div><div class="st">business account</div></div>
+          <div class="acts"><span>📹</span><span>📞</span><span>⋮</span></div>
+        </div>
+        <div class="messages" id="msgPed"></div>
+        <div class="dock">
+          <div class="inp"><span>😊</span><span>Message</span><span class="ei">📎 📷</span></div>
+          <div class="mic">🎤</div>
+        </div>
       </div>
-      <div class="header-actions"><span>📞</span><span>⋮</span></div>
     </div>
+  </div>
 
-    <div class="messages" id="messages"></div>
+  <div class="connector" id="connector">
+    <div class="arrow">➜</div>
+    <div class="lbl">redirect</div>
+  </div>
 
-    <div class="dock">
-      <div class="quick" id="quick"></div>
-      <div class="hint" id="hint"></div>
+  <div class="slot">
+    <div class="caption">Kellogg's chatbot</div>
+    <div class="phone pending" id="phoneKel">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="ic">▪▪▪ 100%</span></div>
+        <div class="wa-header">
+          <span class="back">‹</span>
+          <div class="avatar kellogg">K</div>
+          <div class="who"><div class="nm">Kellogg's India <span class="verified">✅</span></div><div class="st" id="kelStatus">tap the offer to open</div></div>
+          <div class="acts"><span>📹</span><span>📞</span><span>⋮</span></div>
+        </div>
+        <div class="messages" id="msgKel"></div>
+        <div class="dock">
+          <div class="inp"><span>😊</span><span>Message</span><span class="ei">📎 📷</span></div>
+          <div class="mic">🎤</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<button class="restart" id="restart">↺ Restart demo</button>
+<div class="footer">
+  <button class="restart" id="restart">↺ Restart demo</button>
+  <p class="hint" id="hint"></p>
+</div>
 
 <script>
 (function () {
-  var messages = document.getElementById('messages');
-  var quick = document.getElementById('quick');
+  var msgPed = document.getElementById('msgPed');
+  var msgKel = document.getElementById('msgKel');
+  var phoneKel = document.getElementById('phoneKel');
+  var kelStatus = document.getElementById('kelStatus');
+  var connector = document.getElementById('connector');
   var hint = document.getElementById('hint');
-  var avatar = document.getElementById('avatar');
-  var chatName = document.getElementById('chatName');
-  var chatStatus = document.getElementById('chatStatus');
-
   var answers = {};
-  var now = function () {
+
+  function now() {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/^0/, '');
-  };
-
-  function setChat(who) {
-    if (who === 'pedigree') {
-      avatar.className = 'avatar pedigree'; avatar.textContent = 'P';
-      chatName.textContent = 'Pedigree'; chatStatus.textContent = 'online';
-    } else {
-      avatar.className = 'avatar kellogg'; avatar.textContent = 'K';
-      chatName.textContent = "Kellogg's"; chatStatus.textContent = 'typically replies instantly';
-    }
   }
+  function scroll(box) { box.scrollTop = box.scrollHeight; }
+  function setHint(t) { hint.textContent = t || ''; }
 
-  function dayChip(text) {
+  function chip(box, text, enc) {
     var c = document.createElement('div');
-    c.className = 'daychip'; c.textContent = text;
-    messages.appendChild(c); scroll();
+    c.className = 'chip' + (enc ? ' enc' : '');
+    c.innerHTML = (enc ? '🔒 ' : '') + text;
+    box.appendChild(c); scroll(box);
   }
 
-  function scroll() { messages.scrollTop = messages.scrollHeight; }
-
-  function addBubble(side, html, opts) {
-    opts = opts || {};
+  function bubble(box, side, html) {
     var row = document.createElement('div');
     row.className = 'row ' + side;
     var b = document.createElement('div');
-    b.className = 'bubble' + (opts.kellogg ? ' kellogg' : '');
-    b.innerHTML = html + '<span class="meta">' + now() + (side === 'out' ? ' ✓✓' : '') + '</span>';
-    row.appendChild(b);
-    messages.appendChild(row);
-    scroll();
+    b.className = 'bubble';
+    var tick = side === 'out' ? ' <span class="tick">✓✓</span>' : '';
+    b.innerHTML = html + '<span class="tm">' + now() + tick + '</span>';
+    row.appendChild(b); box.appendChild(row); scroll(box);
+    return row;
   }
 
-  function typing(cb, delay) {
+  function typing(box, cb, delay) {
     var row = document.createElement('div');
     row.className = 'row in typing';
     row.innerHTML = '<div class="bubble"><span class="dots"><i></i><i></i><i></i></span></div>';
-    messages.appendChild(row); scroll();
-    setTimeout(function () { row.remove(); cb(); }, delay || 900);
+    box.appendChild(row); scroll(box);
+    setTimeout(function () { row.remove(); cb(); }, delay || 850);
   }
 
-  function setQuick(buttons) {
-    quick.innerHTML = '';
-    (buttons || []).forEach(function (btn) {
+  // WhatsApp interactive buttons attached under the last message
+  function buttons(box, list, opts) {
+    opts = opts || {};
+    var wrap = document.createElement('div');
+    wrap.className = 'wa-btns' + (opts.grouped !== false ? ' grouped' : '');
+    list.forEach(function (btn) {
       var el = document.createElement('button');
-      el.className = 'qbtn' + (btn.cls ? ' ' + btn.cls : '');
-      el.innerHTML = btn.label;
-      el.onclick = btn.onClick;
-      quick.appendChild(el);
+      el.className = 'wa-btn';
+      el.innerHTML = (btn.icon ? '<span class="i">' + btn.icon + '</span>' : '') + '<span>' + btn.label + '</span>';
+      el.onclick = function () {
+        wrap.remove();
+        btn.onClick();
+      };
+      wrap.appendChild(el);
     });
+    box.appendChild(wrap); scroll(box);
+    return wrap;
   }
 
-  function setInput(placeholder) {
-    quick.innerHTML = '';
-    var w = document.createElement('div');
-    w.className = 'fakeinput';
-    w.innerHTML = '<span>' + placeholder + '</span><span class="send">➤</span>';
-    quick.appendChild(w);
-  }
-
-  function setHint(t) { hint.textContent = t || ''; }
-
-  // ---------- Flow ----------
+  // ---------------- Flow ----------------
   function start() {
-    messages.innerHTML = '';
+    msgPed.innerHTML = ''; msgKel.innerHTML = '';
     answers = {};
-    setChat('pedigree');
-    dayChip('TODAY');
-    // context: the user claimed Pedigree earlier and left positive feedback
-    addBubble('in', 'Thanks for the ⭐⭐⭐⭐⭐ feedback on your Pedigree sample, Rahul! So glad your pup loved it. 🐶');
-    setQuick([]);
-    setHint('A targeted push is sent to happy Pedigree claimants…');
-    setTimeout(pushOffer, 1100);
+    phoneKel.classList.add('pending');
+    connector.classList.remove('live');
+    kelStatus.textContent = 'tap the offer to open';
+    setHint('');
+
+    chip(msgPed, 'TODAY');
+    chip(msgPed, 'Messages are end-to-end encrypted.', true);
+    bubble(msgPed, 'in', 'Thanks for the <span class="stars">★★★★★</span> feedback on your Pedigree sample, Rahul! 🐶 So glad your pup loved it.');
+    setTimeout(pushOffer, 900);
   }
 
   function pushOffer() {
-    typing(function () {
-      addBubble('in',
-        '<div class="offer">' +
-          '<div class="banner"><span>KELLOGG\'S</span></div>' +
-          '<div class="body">We think we\'ve got a special offer for you — and we reckon you\'ll <strong>love Kellogg\'s</strong>. 🥣<br><br>Would you like to claim a <strong>free sample</strong>?</div>' +
-        '</div>'
-      );
-      setHint('👇 Tap to accept the offer');
-      setQuick([
-        { label: '🎁 Yes, claim my free sample', cls: 'primary', onClick: acceptOffer },
-        { label: 'No thanks', onClick: function () {
-            addBubble('out', 'No thanks');
-            typing(function () { addBubble('in', 'No worries — enjoy the rest of your day! 🐾'); setQuick([]); setHint('Demo ended. Restart to replay.'); });
-        } }
-      ]);
+    typing(msgPed, function () {
+      bubble(msgPed, 'in',
+        '<div class="offer"><div class="hero"><div class="k">KELLOGG\'S</div><div class="s">A LITTLE SOMETHING FOR YOU</div></div></div>' +
+        'We think we\'ve got a special offer for you — and we reckon you\'ll <b>love Kellogg\'s</b>. 🥣<br><br>Tap below to claim your <b>free sample</b>.');
+      buttons(msgPed, [
+        { icon: '↗', label: 'Claim free Kellogg\'s sample', onClick: redirect }
+      ], { grouped: false });
+      setHint('👇 Tap the offer button in the Pedigree chat');
     });
   }
 
-  function acceptOffer() {
-    addBubble('out', 'Yes, claim my free sample 🎁');
-    setQuick([]);
-    setHint('Redirecting to the Kellogg\'s chatbot…');
+  function redirect() {
+    bubble(msgPed, 'out', 'Claim free Kellogg\'s sample ↗');
+    connector.classList.add('live');
+    setHint('Opening the Kellogg\'s chatbot…');
     setTimeout(function () {
-      typing(function () {
-        setChat('kellogg');
-        dayChip("You're now chatting with Kellogg's");
-        addBubble('in', '<span class="brandline">Kellogg\'s</span> here! 👋 Welcome, and congrats on your free sample. Let\'s get it sorted with a few quick questions.', { kellogg: true });
-        setTimeout(askProduct, 700);
-      }, 1100);
-    }, 700);
+      phoneKel.classList.remove('pending');
+      kelStatus.textContent = 'online';
+      if (window.matchMedia('(max-width: 720px)').matches) {
+        phoneKel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      chip(msgKel, 'TODAY');
+      chip(msgKel, 'Messages are end-to-end encrypted.', true);
+      typing(msgKel, kelGreeting, 700);
+    }, 650);
+  }
+
+  function kelGreeting() {
+    bubble(msgKel, 'in',
+      'Hi Rahul! 👋 You\'ve come over from <b>Pedigree</b>.<br><br>We hope your dog\'s health is great 🐶 — but <b>your health</b> needs to be in check too! 🥣<br><br>Let\'s set up your free Kellogg\'s sample.');
+    setHint('Now continue the journey in the Kellogg\'s chat →');
+    setTimeout(askProduct, 900);
   }
 
   function askProduct() {
-    typing(function () {
-      addBubble('in', 'First up — which sample would you like to try?', { kellogg: true });
-      setHint('Pick a product');
-      setQuick([
-        { label: '🌽 Corn Flakes', cls: 'kellogg', onClick: function () { pickProduct('Corn Flakes'); } },
-        { label: '🍫 Chocos', cls: 'kellogg', onClick: function () { pickProduct('Chocos'); } },
-        { label: '🥣 Muesli', cls: 'kellogg', onClick: function () { pickProduct('Muesli'); } }
+    typing(msgKel, function () {
+      bubble(msgKel, 'in', 'Which sample would you like to try first?');
+      buttons(msgKel, [
+        { label: '🌽 Corn Flakes', onClick: function () { pick('product', 'Corn Flakes', askWho); } },
+        { label: '🍫 Chocos', onClick: function () { pick('product', 'Chocos', askWho); } },
+        { label: '🥣 Muesli', onClick: function () { pick('product', 'Muesli', askWho); } }
       ]);
     });
   }
-  function pickProduct(p) {
-    answers.product = p;
-    addBubble('out', p);
-    setQuick([]);
-    typing(function () {
-      addBubble('in', 'Great choice! 🙌 Who\'s it mainly for?', { kellogg: true });
-      setHint('Pick one');
-      setQuick([
-        { label: 'Kids', cls: 'kellogg', onClick: function () { pickWho('Kids'); } },
-        { label: 'Whole family', cls: 'kellogg', onClick: function () { pickWho('Whole family'); } },
-        { label: 'Just me', cls: 'kellogg', onClick: function () { pickWho('Just me'); } }
+
+  function askWho() {
+    typing(msgKel, function () {
+      bubble(msgKel, 'in', 'Who\'s it mainly for? 🙂');
+      buttons(msgKel, [
+        { label: 'Just me', onClick: function () { pick('who', 'Just me', askAddress); } },
+        { label: 'Whole family', onClick: function () { pick('who', 'Whole family', askAddress); } },
+        { label: 'Kids', onClick: function () { pick('who', 'Kids', askAddress); } }
       ]);
     });
   }
-  function pickWho(w) {
-    answers.who = w;
-    addBubble('out', w);
-    setQuick([]);
-    typing(function () {
-      addBubble('in', 'Perfect. Now, where should we deliver your free sample? 📦<br><br>Please share your <strong>full delivery address</strong> (flat, street, city & PIN code).', { kellogg: true });
-      setHint('👇 Tap to send a sample address');
-      setQuick([
-        { label: '📍 42, Palm Residency, MG Road,\nBengaluru 560001', cls: 'primary', onClick: function () { giveAddress('42, Palm Residency, MG Road, Bengaluru 560001'); } }
-      ]);
+
+  function askAddress() {
+    typing(msgKel, function () {
+      bubble(msgKel, 'in', 'Great! Where should we send it? 📦<br><br>Please share your <b>full delivery address</b> (flat, street, city & PIN).');
+      buttons(msgKel, [
+        { icon: '📍', label: 'Share my address', onClick: giveAddress }
+      ], { grouped: false });
+      setHint('Kellogg\'s re-collects the address here in WhatsApp');
     });
   }
-  function giveAddress(addr) {
-    answers.address = addr;
-    addBubble('out', addr.replace(/, /g, ',<br>'));
-    setQuick([]);
-    typing(function () {
-      addBubble('in', 'And a mobile number for delivery updates? 📱', { kellogg: true });
-      setQuick([
-        { label: '📱 +91 98••• ••210', cls: 'primary', onClick: function () { givePhone('+91 98••• ••210'); } }
-      ]);
+
+  function giveAddress() {
+    answers.address = '42, Palm Residency, MG Road, Bengaluru 560001';
+    bubble(msgKel, 'out', '42, Palm Residency,<br>MG Road,<br>Bengaluru 560001');
+    typing(msgKel, function () {
+      bubble(msgKel, 'in', 'And a mobile number for delivery updates? 📱');
+      buttons(msgKel, [
+        { icon: '📱', label: 'Share +91 98••• ••210', onClick: givePhone }
+      ], { grouped: false });
     });
   }
-  function givePhone(ph) {
-    answers.phone = ph;
-    addBubble('out', ph);
-    setQuick([]);
-    typing(function () {
-      addBubble('in',
-        'Let me confirm your details 📝<br><br>' +
-        '• <strong>Sample:</strong> ' + answers.product + '<br>' +
-        '• <strong>For:</strong> ' + answers.who + '<br>' +
-        '• <strong>Deliver to:</strong> ' + answers.address + '<br>' +
-        '• <strong>Mobile:</strong> ' + answers.phone + '<br><br>' +
-        'All correct?', { kellogg: true });
-      setHint('Confirm to finish');
-      setQuick([
-        { label: '✅ Confirm & claim', cls: 'kellogg', onClick: confirm },
-        { label: '✏️ Edit address', onClick: function () { pickWho(answers.who); } }
+
+  function givePhone() {
+    answers.phone = '+91 98••• ••210';
+    bubble(msgKel, 'out', '+91 98••• ••210');
+    typing(msgKel, function () {
+      bubble(msgKel, 'in',
+        'Let me confirm 📝<br><br>' +
+        '• <b>Sample:</b> ' + answers.product + '<br>' +
+        '• <b>For:</b> ' + answers.who + '<br>' +
+        '• <b>Deliver to:</b> ' + answers.address + '<br>' +
+        '• <b>Mobile:</b> ' + answers.phone + '<br><br>All correct?');
+      buttons(msgKel, [
+        { label: '✅ Confirm & claim', onClick: confirm },
+        { label: '✏️ Edit address', onClick: askAddress }
       ]);
-    }, 1200);
+    }, 1150);
   }
+
   function confirm() {
-    addBubble('out', 'Confirm & claim ✅');
-    setQuick([]);
-    typing(function () {
-      addBubble('in', '🎉 Done! Your free <strong>' + answers.product + '</strong> sample is on its way to ' + answers.address.split(',')[0] + '. Expect it in 3–5 days.<br><br>We\'ll text you the tracking link. Enjoy, and welcome to Kellogg\'s! 🥣❤️', { kellogg: true });
-      setInput('Message');
+    bubble(msgKel, 'out', 'Confirm & claim ✅');
+    typing(msgKel, function () {
+      bubble(msgKel, 'in',
+        '🎉 Done! Your free <b>' + answers.product + '</b> sample is on its way to ' + answers.address.split(',')[0] + '.<br><br>Expect it in 3–5 days — we\'ll text the tracking link. Welcome to Kellogg\'s! 🥣❤️');
       setHint('✓ Journey complete');
-    }, 1300);
+    }, 1250);
+  }
+
+  function pick(key, val, next) {
+    answers[key] = val;
+    bubble(msgKel, 'out', val);
+    setTimeout(next, 450);
   }
 
   document.getElementById('restart').onclick = start;
-  document.getElementById('back').onclick = start;
   start();
 })();
 </script>
